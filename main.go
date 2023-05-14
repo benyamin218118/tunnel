@@ -19,6 +19,7 @@ func main() {
 	src := flag.String("src", ":8989", "listen host:port")
 	dst := flag.String("dst", "8.8.8.8:53", "destination host:port")
 	enableUDP := flag.Bool("udp", false, "enable udp ( experimental, needs to enabled at both sides )")
+	udpTimeout := flag.Int("udp-timeout", 8, "udp read timeout ( deadline for read from destination )")
 	transport := flag.String("transport", "tcp", "[ tcp, websocket ]")
 	host := flag.String("host-header", "", "use it at the relay node to specify the host header in websocket transport handshake")
 	wsPath := flag.String("ws-path", "/", "route for ws transport, useful when gate is behind reverse proxy, /ws for example")
@@ -27,6 +28,9 @@ func main() {
 	flag.Parse()
 
 	if *help == true {
+		println(`
+find me on telegram: @unsafepointer
+`)
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
@@ -38,7 +42,7 @@ func main() {
 		}
 	default:
 		{
-			println("wrong transport type")
+			println("wrong transport type", *transport)
 			os.Exit(1)
 		}
 	}
@@ -72,7 +76,7 @@ destination: %s
 	}
 
 	var relay IService
-	relay = NewTCPRelay(*src, *dst, *enableUDP, *transport, *host, *wsPath, *serverType)
+	relay = NewTunnel(*src, *dst, *enableUDP, *transport, *host, *wsPath, *serverType, *udpTimeout)
 	println(fmt.Sprintf("%s %s %s", *src, tr, *dst))
 	relay.Start()
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type TCPRelay struct {
+type Tunnel struct {
 	listener      net.Listener
 	udpEnabled    bool
 	udpListener   *net.UDPConn
@@ -22,9 +22,10 @@ type TCPRelay struct {
 	hostHeader    string
 	wsPath        string
 	serverType    int
+	udpTimeout    int
 }
 
-func NewTCPRelay(
+func NewTunnel(
 	src string,
 	destination string,
 	enableUDP bool,
@@ -32,6 +33,7 @@ func NewTCPRelay(
 	hostHeader string,
 	wsPath string,
 	serverType int,
+	udpTimeout int,
 ) IService {
 	listener, err := net.Listen("tcp", src)
 	panicIfErr(err)
@@ -49,7 +51,7 @@ func NewTCPRelay(
 		}
 	}
 
-	return &TCPRelay{
+	return &Tunnel{
 		listener:      listener,
 		src:           src,
 		destination:   destination,
@@ -61,10 +63,11 @@ func NewTCPRelay(
 		hostHeader:    hostHeader,
 		wsPath:        wsPath,
 		serverType:    serverType,
+		udpTimeout:    udpTimeout,
 	}
 }
 
-func (s *TCPRelay) Start() {
+func (s *Tunnel) Start() {
 	if s.udpEnabled && s.serverType == 2 {
 		go func() {
 			buf := make([]byte, s.udpBufferSize)
@@ -218,7 +221,7 @@ func (s *TCPRelay) Start() {
 	}
 }
 
-func (s *TCPRelay) handshakeWSFromRelay(destConn net.Conn) error {
+func (s *Tunnel) handshakeWSFromRelay(destConn net.Conn) error {
 	if s.destination[strings.Index(s.destination, ":")+1:] == `443` {
 		println("tls not supported")
 		os.Exit(1)
@@ -269,7 +272,7 @@ Cache-Control: no-cache`, s.wsPath, s.hostHeader, socKey, s.hostHeader) + "\r\n\
 	return nil
 }
 
-func (s *TCPRelay) handshakeWSFromGate(srcConn net.Conn) error {
+func (s *Tunnel) handshakeWSFromGate(srcConn net.Conn) error {
 	buf := make([]byte, 1024)
 	n, err := srcConn.Read(buf)
 	if err != nil {
@@ -303,10 +306,10 @@ Sec-WebSocket-Accept: %s`, socKey) + "\r\n\r\n"
 	return nil
 }
 
-func (s *TCPRelay) fromGateToUDPClient(conn *net.UDPConn, connToGate net.Conn, cliAddr *net.UDPAddr) {
+func (s *Tunnel) fromGateToUDPClient(conn *net.UDPConn, connToGate net.Conn, cliAddr *net.UDPAddr) {
 	buf := make([]byte, s.udpBufferSize)
 	for {
-		connToGate.SetReadDeadline(time.Now().Add(8 * time.Second))
+		connToGate.SetReadDeadline(time.Now().Add(time.Duration(s.udpTimeout) * time.Second))
 		n, err := connToGate.Read(buf)
 		if err != nil {
 			if !strings.Contains(err.Error(), "timeout") {
