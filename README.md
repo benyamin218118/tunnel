@@ -78,6 +78,46 @@ here `-dst` is pointing to xray running on the ams server.
 just set the xray config address to your IR VPS address and the port to 4433 ( because relay is accepting connections on 4433 ;D )
 
 
+## How to Keep The Process Alive?
+you can use screen or create a service for it
+if service is the choice then you can create a service like this in **both servers**:
+
+first you need to create a unit file in this address :<br/>
+`/etc/systemd/system/SERVICENAME.service`
+
+choose a service name and replace it with SERVICENAME first; lets use `tunnelsvc`<br/>
+now you need to create the file with nano :<br/>
+`nano /etc/systemd/system/tunnelsvc.service`
+
+and paste this content into it :
+```
+[Unit]
+Description=tunnel service
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=16
+User=root
+ExecStart=tunnel  ARGUMENTS
+
+[Install]
+WantedBy=multi-user.target
+```
+dont forget to edit the `ExecStart` value, thats the tunnel command you want to run as relay and gate.
+after saving the contents ( by ctrl+x  y  enter ) you need to enable this `tunnelsvc` using `systemctl` so it will start again after reboot<br/>
+`$ systemctl enable tunnelsvc`
+
+and then you need to start the service<br/>
+`$ service tunnelsvc start`
+
+to check the service state you can use the `service tunnelsvc status` but if you wanned to see request logs :<br/>
+`$ journalctl -u tunnelsvc -n 32 -f`
+
+
 ### Some Use cases
 
 - tunneling ssh over cdn
