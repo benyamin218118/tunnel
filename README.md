@@ -33,7 +33,7 @@ if enabled, `relay` will accept udp and tcp on the same port and `gate` will for
 yes over cdn tunneling is supported too, you need to create an A Record Pointing to the `gate` server with Proxy Enabled.</br>
 just dont forget to set the hostname using `-host-header hostname`<br/>
 **Can We Tunnel UDP Over CDN Too?**<br/>
-yes Just Like when it's not behind cdn with no magic.
+yes Just Like when it's not behind cdn with no magic.<br/>
 note: don't fotget to set the transport to `websocket` if you're going to use cdn between relay and gate
 
 ---
