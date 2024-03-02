@@ -34,7 +34,7 @@ yes over cdn tunneling is supported too, you need to create an A Record Pointing
 just dont forget to set the hostname using `-host-header hostname`<br/>
 **Can We Tunnel UDP Over CDN Too?**<br/>
 yes Just Like when it's not behind cdn with no magic.<br/>
-note: don't fotget to set the transport to `websocket` if you're going to use cdn between relay and gate
+note: don't forget to set the transport to `websocket` if you're going to use cdn between relay and gate
 
 ---
 
